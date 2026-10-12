@@ -1,4 +1,4 @@
-package infra.configuration;
+package acbManagement.infra.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

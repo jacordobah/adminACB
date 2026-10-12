@@ -22,7 +22,12 @@ public class MeetingPoint {
     @Column(name = "distance", nullable = false)
     private int distance;
 
+    @Column(name = "latitude", nullable = false)
+    private double latitude;
 
+    @Column(name = "longitude", nullable = false)
+    private double longitude;
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumns({
             @JoinColumn(name = "route_id", referencedColumnName = "route_id", nullable = false),
