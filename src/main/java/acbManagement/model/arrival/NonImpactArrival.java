@@ -13,12 +13,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class NonImpactArrival {
 
-    @EmbeddedId
-    private NonImpactArrivalId id = new NonImpactArrivalId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "non_impact_arrival_id")
+    private Long nonImpactArrivalId; // ◄ PK Simple y Autoincremental, idéntica a tu SQL
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("guideId")
-    @JoinColumn(name = "guide_id", nullable = false)
+    @JoinColumn(name = "guide_id", nullable = false) // ◄ FK simple hacia el guía
     private Guide guide;
 
     @Column(name = "date", nullable = false)
@@ -32,9 +33,6 @@ public class NonImpactArrival {
     private int counter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumns({
-            @JoinColumn(name = "impact_arrival_id", referencedColumnName = "impact_arrival_id"),
-            @JoinColumn(name = "guide_id", referencedColumnName = "guide_id", insertable = false, updatable = false)
-    })
+    @JoinColumn(name = "impact_arrival_id") // ◄ FK simple y nullable hacia la PK de ImpactArrival
     private ImpactArrival impactArrival;
 }

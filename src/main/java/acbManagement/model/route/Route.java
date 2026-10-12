@@ -3,6 +3,8 @@ package acbManagement.model.route;
 import acbManagement.model.school.School;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalTime;
 import java.util.List;
 
 @Entity
@@ -31,4 +33,7 @@ public class Route {
 
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<DefaultOperation> defaultOperations;
+
+    @Column(name = "scheduled_start_time", nullable = false)
+    private LocalTime scheduledStartTime;
 }

@@ -13,21 +13,25 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ImpactArrival {
 
-    @EmbeddedId
-    private ImpactArrivalId id = new ImpactArrivalId();
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "impact_arrival_id")
+    private Long impactArrivalId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("guideId")
     @JoinColumn(name = "guide_id", nullable = false)
     private Guide guide;
 
     @Column(name = "date", nullable = false)
     private LocalDateTime date;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ImpactStatus status;
 
-    @Column(name = "details", columnDefinition = "TEXT", nullable = false)
-    private String details;
+    @Column(name = "detail", columnDefinition = "TEXT")
+    private String detail;
+
+    @OneToMany(mappedBy = "impactArrival", fetch = FetchType.LAZY)
+    private java.util.List<NonImpactArrival> nonImpactArrivals;
 }

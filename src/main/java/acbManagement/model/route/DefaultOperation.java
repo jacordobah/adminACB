@@ -17,7 +17,6 @@ public class DefaultOperation {
 
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("routeId")
     @JoinColumns({
             @JoinColumn(name = "route_id", referencedColumnName = "route_id", insertable = false, updatable = false),
             @JoinColumn(name = "shift_code", referencedColumnName = "shift_code", insertable = false, updatable = false)
