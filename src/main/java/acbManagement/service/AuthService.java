@@ -3,22 +3,20 @@ package acbManagement.service;
 import acbManagement.dto.LoginRequest;
 import acbManagement.dto.LoginResponse;
 import acbManagement.model.guide.Guide;
-import acbManagement.repository.GuideRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
 
-    private final GuideRepository guideRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
 
-    public AuthService(GuideRepository guideRepository,
-                       PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
-        this.guideRepository = guideRepository;
-        this.passwordEncoder = passwordEncoder;
+    public AuthService(AuthenticationManager authenticationManager, JwtService jwtService) {
+        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
 
@@ -26,12 +24,17 @@ public class AuthService {
         if (request.username() == null || request.password() == null) {
             throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
         }
-        Guide guide = guideRepository.findByUsername(request.username())
-                .filter(g -> g.isActive() && passwordEncoder.matches(request.password(), g.getPassword()))
-                .orElseThrow(() -> new IllegalArgumentException("Usuario o contraseña incorrectos."));
 
-        String token = jwtService.createToken(guide);
-        return new LoginResponse(token,
-                new LoginResponse.UserInfo(guide.getUserId(), guide.getName(), guide.getRole().name(), guide.getZone()));
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password())
+            );
+            Guide guide = (Guide) auth.getPrincipal();
+            String token = jwtService.createToken(guide);
+            return new LoginResponse(token,
+                    new LoginResponse.UserInfo(guide.getUserId(), guide.getName(), guide.getRole().name(), guide.getZone()));
+        } catch (AuthenticationException e) {
+            throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
+        }
     }
 }
