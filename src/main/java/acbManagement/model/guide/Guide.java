@@ -9,7 +9,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "guides")
-@PrimaryKeyJoinColumn(name = "guide_id") // Enlaza la PK de Guide con la PK de User
+@PrimaryKeyJoinColumn(name = "user_id") // Enlaza la PK de Guide con la PK de User
 @Getter
 @Setter
 @NoArgsConstructor
