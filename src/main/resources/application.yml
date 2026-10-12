@@ -15,6 +15,13 @@ spring:
   flyway:
     enabled: true
     clean-disabled: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jws-algorithms: HS256
+
 acb:
   jwt:
     secret: ${ACB_JWT_SECRET:acb-dev-secret-change-me-0123456789abcdef}
