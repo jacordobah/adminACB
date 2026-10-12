@@ -18,7 +18,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: school_routes_api
+    container_name: acb_admin_lo_api
     ports:
       - "8080:8080"
     environment:

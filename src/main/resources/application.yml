@@ -1,6 +1,6 @@
 spring:
   application:
-    name: school-routes-api
+    name: ACB_admin_lo
 
   datasource:
     url: ${SPRING_DATASOURCE_URL}

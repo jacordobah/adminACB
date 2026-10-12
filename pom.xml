@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>acb</groupId>
-	<artifactId>acbManagement</artifactId>
+	<artifactId>ACB_admin_lo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
+	<name>ACB_admin_lo</name>
 	<description/>
 	<url/>
 	<licenses>
