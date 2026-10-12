@@ -25,6 +25,6 @@ public class School {
     @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "active", nullable = false)
     private boolean isActive = true; // Flag para el borrado lógico del colegio
 }

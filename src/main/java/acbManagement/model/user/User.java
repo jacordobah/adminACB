@@ -34,7 +34,7 @@ public class User {
     @Column(name = "role", nullable = false)
     private Role role;
 
-    @Column(name = "is_active", nullable = false)
+    @Column(name = "active", nullable = false)
     private boolean isActive = true; // Flag para tu Borrado Lógico
 }
 

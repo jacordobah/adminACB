@@ -10,7 +10,7 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
     `user_id` BIGINT NOT NULL AUTO_INCREMENT,
-    `document_type` ENUM('C.C', 'C.E', 'NUIP', 'PPT', 'PPE') NOT NULL,
+    `document_type` ENUM('CC','CE','NUIP','PPT','PPE') NOT NULL,
     `document_number` VARCHAR(45) NOT NULL,
     `name` VARCHAR(45) NOT NULL,
     `address` VARCHAR(45) NOT NULL,
@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `guides` (
     `username` VARCHAR(45) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
     `email` VARCHAR(45) NOT NULL,
-    `zone覆` VARCHAR(45) NOT NULL,
+    `zone` VARCHAR(45) NOT NULL,
     `user_id` BIGINT NOT NULL,
     PRIMARY KEY (`user_id`),
     CONSTRAINT `fk_guides_users1`

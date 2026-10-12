@@ -7,7 +7,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "students")
-@PrimaryKeyJoinColumn(name = "student_id")
+@PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter
 @NoArgsConstructor

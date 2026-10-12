@@ -25,9 +25,6 @@ public class Route {
     @JoinColumn(name = "school_id", nullable = false)
     private School school;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
-
     @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<MeetingPoint> meetingPoints;
 
