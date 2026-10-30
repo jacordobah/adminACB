@@ -27,12 +27,10 @@ public class JwtService {
     public String createToken(Guide guide) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .subject(String.valueOf(guide.getUserId()))
+                .subject(String.valueOf(guide.getGuideId()))
                 .issuedAt(now)
                 .expiresAt(now.plus(expirationHours, ChronoUnit.HOURS))
-                .claim("name", guide.getName())
                 .claim("role", guide.getRole().name())
-                .claim("zone", guide.getZone())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

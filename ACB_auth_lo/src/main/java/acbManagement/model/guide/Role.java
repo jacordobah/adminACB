@@ -1,20 +1,17 @@
-package acbManagement.model.user;
+package acbManagement.model.guide;
 
+import lombok.Getter;
+
+@Getter
 public enum Role {
     GUIDE("Guía Escolar"),
     LEADER("Líder de Zona"),
-    MANAGER("Gerente Operativo"),
-    STUDENT("Estudiante"),
-    GUARDIAN("Acudiente");
+    MANAGER("Gerente Operativo");
 
     private final String spanishName;
 
     Role(String spanishName) {
         this.spanishName = spanishName;
-    }
-
-    public String getSpanishName() {
-        return spanishName;
     }
 
     public static Role fromSpanishName(String text) {
