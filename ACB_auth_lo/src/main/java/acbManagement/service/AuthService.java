@@ -21,9 +21,9 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        if (request.username() == null || request.password() == null) {
+        /*if (request.username() == null || request.password() == null) {
             throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
-        }
+        }*/
 
         try {
             Authentication auth = authenticationManager.authenticate(
@@ -32,7 +32,7 @@ public class AuthService {
             Guide guide = (Guide) auth.getPrincipal();
             String token = jwtService.createToken(guide);
             return new LoginResponse(token,
-                    new LoginResponse.UserInfo(guide.getUserId(), guide.getName(), guide.getRole().name(), guide.getZone()));
+                    new LoginResponse.UserInfo(guide.getGuideId(),guide.getRole().name()));
         } catch (AuthenticationException e) {
             throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
         }
