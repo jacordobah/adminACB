@@ -1,45 +1,102 @@
 version: '3.8'
 
 services:
-  db-mysql:
-    image: mysql:8.0
-    container_name: school_routes_db
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: school_routes
-      MYSQL_USER: routes_user
-      MYSQL_PASSWORD: user_password
-    ports:
-      - "3307:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
+  # --- INFRAESTRUCTURA DE BASES DE DATOS ---
 
-  api-spring:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: acb_admin_lo_api
+  acb_mysql_db:
+    image: mysql:8.0
+    container_name: acb_mysql_db
     ports:
-      - "8080:8080"
+      - "3307:3306" # Mapeo externo 3307 para evitar conflicto con tu PC
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://db-mysql:3306/school_routes?allowPublicKeyRetrieval=true&useSSL=false
-      - SPRING_DATASOURCE_USERNAME=routes_user
-      - SPRING_DATASOURCE_PASSWORD=user_password
+      MYSQL_ROOT_PASSWORD: root_mysql_password # Tu nueva contraseña unificada
     volumes:
-      - .:/app
-      - ~/.m2:/root/.m2
+      - acb_mysql_data:/var/lib/mysql
+    command: --initialize-insecure --default-authentication-plugin=mysql_native_password
+
+  acb_postgres_db:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: acb_postgres_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root_postgres_pass
+      POSTGRES_DB: acb_operation_db
+    volumes:
+      - acb_postgres_data:/var/lib/postgresql/data
+
+
+  # --- MICROSERVICIOS (Se comunican internamente por puerto 3306) ---
+
+  ACB_admin_operation_lo:
+    build:
+      context: ./ACB_admin_operation_lo
+      dockerfile: Dockerfile.dev
+    container_name: acb_admin_operation
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./ACB_admin_operation_lo:/app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://acb_postgres_db:5432/acb_operation_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=root_postgres_pass
+      - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
     depends_on:
-      - db-mysql
-    networks:
-      default: {}
-      acb-net:
-        aliases:
-          - admin-api
+      - acb_postgres_db
+
+  ACB_admin_routes_lo:
+    build:
+      context: ./ACB_admin_routes_lo
+      dockerfile: Dockerfile.dev
+    container_name: acb_admin_routes
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./ACB_admin_routes_lo:/app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_routes_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root_mysql_password
+      - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+    depends_on:
+      - acb_mysql_db
+
+  ACB_admin_users_lo:
+    build:
+      context: ./ACB_admin_users_lo
+      dockerfile: Dockerfile.dev
+    container_name: acb_admin_users
+    ports:
+      - "8083:8083"
+    volumes:
+      - ./ACB_admin_users_lo:/app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_users_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root_mysql_password
+      - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+    depends_on:
+      - acb_mysql_db
+
+  ACB_auth_lo:
+    build:
+      context: ./ACB_auth_lo
+      dockerfile: Dockerfile.dev
+    container_name: acb_auth
+    ports:
+      - "8084:8084"
+    volumes:
+      - ./ACB_auth_lo:/app
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_auth_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=root_mysql_password
+      - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+    depends_on:
+      - acb_mysql_db
 
 volumes:
-  mysql_data:
-
-networks:
-  acb-net:
-    external: true
-    name: acb-net
+  acb_mysql_data:
+  acb_postgres_data:
