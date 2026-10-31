@@ -1,9 +1,15 @@
 package acbManagement.model.user;
 
 public enum DocumentType {
-    CC,    // Cédula de Ciudadanía
-    CE,    // Cédula de Extranjería
-    NUIP,  // Número Único de Identificación Personal
-    PPT,   // Permiso de Protección Temporal
-    PPE    // Permiso Especial de Permanencia
+    CC("C.C"), CE("C.E"), NUIP("NUIP"), PPT("PPT"), PPE("PPE");
+
+    private final String value;
+
+    DocumentType(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }
