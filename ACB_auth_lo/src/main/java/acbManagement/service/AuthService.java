@@ -7,6 +7,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,10 +23,13 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        /*if (request.username() == null || request.password() == null) {
-            throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
-        }*/
-
+        /*
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String hashdb = "$2y$10$0HZhIkxULORjuJEyidsnY.31MatWZSr8MCDRCZBce1lA4oWN1F6N2";
+        String prueba = "admin2026";
+        System.out.println(passwordEncoder.encode("admin2026"));
+        System.out.println(passwordEncoder.matches(hashdb,prueba)?"coincide":"no coincide");
+        */
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password())
