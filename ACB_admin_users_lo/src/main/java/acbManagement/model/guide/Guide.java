@@ -1,57 +1,39 @@
 package acbManagement.model.guide;
 
-import acbManagement.model.route.DefaultOperation;
+import acbManagement.model.user.DTO.UserRegistrationDto;
 import acbManagement.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
 
 @Entity
 @Table(name = "guides")
-@PrimaryKeyJoinColumn(name = "user_id")
+@PrimaryKeyJoinColumn(name = "guide_id", referencedColumnName = "user_id")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Guide extends User implements UserDetails {
+public class Guide extends User {
 
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username;
+    public Guide(UserRegistrationDto user,GuideRegistrationDto guide){
+        this.contractNumber = guide.contractNumber();
+        this.email = guide.email();
+        this.zone = guide.email();
+        this.setName(user.name());
+        this.setAddress(user.address());
+        this.setDocumentNumber(user.documentNumber());
+        this.setDocumentType(user.documentType());
+        this.setRole(user.role());
+        this.setPhone(user.phone());
+        this.setActive(true);
+    }
 
-    @Column(name = "password", nullable = false, length = 255)
-    private String password;
-
-    @Column(name = "email", nullable = false, unique = true, length = 100)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(name = "zone", nullable = false, length = 100)
+    @Column(nullable = false, length = 100)
     private String zone;
 
     @Column(name = "contract_number", nullable = false, length = 50)
     private String contractNumber;
-
-    @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DefaultOperation> defaultRoutes;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + getRole().name()));
-    }
-
-    @Override
-    public boolean isAccountNonExpired() { return true; }
-
-    @Override
-    public boolean isAccountNonLocked() { return true; }
-
-    @Override
-    public boolean isCredentialsNonExpired() { return true; }
-
-    @Override
-    public boolean isEnabled() { return isActive(); }
 }

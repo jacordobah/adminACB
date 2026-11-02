@@ -4,7 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uq_identity_document", columnNames = {"document_type", "document_number"})
+        }
+)
 @Inheritance(strategy = InheritanceType.JOINED) // Estrategia de tabla unificada por asociación
 @Getter
 @Setter
@@ -21,20 +26,25 @@ public class User {
     @Column(name = "document_type", nullable = false)
     private DocumentType documentType;
 
-    @Column(name = "document_number", nullable = false, length = 30)
+    @Column(name = "document_number", nullable = false, length = 20)
     private String documentNumber;
 
-    @Column(name = "name", nullable = false, length = 150)
+    @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(name = "address", nullable = false, length = 200)
+    @Column(nullable = false, length = 200)
     private String address;
+
+    @Column(nullable = false, length = 25)
+    private String phone;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
 
     @Column(name = "active", nullable = false)
-    private boolean isActive = true; // Flag para tu Borrado Lógico
+    private boolean active = true; //Borrado Lógico
+
+
 }
 

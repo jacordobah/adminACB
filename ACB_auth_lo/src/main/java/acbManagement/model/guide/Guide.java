@@ -1,7 +1,5 @@
 package acbManagement.model.guide;
 
-import acbManagement.model.route.DefaultOperation;
-import acbManagement.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,13 +10,16 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "guides")
-@PrimaryKeyJoinColumn(name = "user_id")
+@Table(name = "guides_login")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Guide extends User implements UserDetails {
+public class Guide implements UserDetails {
+
+    @Id
+    @Column(name = "guide_id")
+    private Long guideId;
 
     @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
@@ -26,17 +27,12 @@ public class Guide extends User implements UserDetails {
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    @Column(name = "email", nullable = false, unique = true, length = 100)
-    private String email;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
 
-    @Column(name = "zone", nullable = false, length = 100)
-    private String zone;
-
-    @Column(name = "contract_number", nullable = false, length = 50)
-    private String contractNumber;
-
-    @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DefaultOperation> defaultRoutes;
+    @Column(nullable = false)
+    private boolean active = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -54,4 +50,5 @@ public class Guide extends User implements UserDetails {
 
     @Override
     public boolean isEnabled() { return isActive(); }
+
 }
