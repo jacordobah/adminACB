@@ -1,7 +1,7 @@
 package acbManagement.model.guide.DTO;
 
 public record GuideDetailResponse(
-        Long userId,
+        Long guideId,
         String documentType,
         String documentNumber,
         String name,
