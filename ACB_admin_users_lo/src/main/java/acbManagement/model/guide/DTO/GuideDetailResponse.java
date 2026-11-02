@@ -5,6 +5,7 @@ public record GuideDetailResponse(
         String documentType,
         String documentNumber,
         String name,
+        String Role,
         String address,
         String phone,
         String contractNumber,

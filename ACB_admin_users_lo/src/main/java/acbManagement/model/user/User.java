@@ -10,7 +10,7 @@ import lombok.*;
                 @UniqueConstraint(name = "uq_identity_document", columnNames = {"document_type", "document_number"})
         }
 )
-//@Inheritance(strategy = InheritanceType.JOINED) // Estrategia de tabla unificada por asociación
+@Inheritance(strategy = InheritanceType.JOINED) // Estrategia de tabla unificada por asociación
 @Getter
 @Setter
 @NoArgsConstructor
@@ -43,7 +43,7 @@ public class User {
     private Role role;
 
     @Column(name = "active", nullable = false)
-    private boolean isActive = true; //Borrado Lógico
+    private boolean active = true; //Borrado Lógico
 
 
 }

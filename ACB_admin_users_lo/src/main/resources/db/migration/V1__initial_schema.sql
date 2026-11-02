@@ -22,7 +22,7 @@ USE `acb_users_db` ;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `users` (
     `user_id` BIGINT NOT NULL AUTO_INCREMENT,
-    `document_type` ENUM('C.C', 'C.E', 'NUIP', 'PPT', 'PPE') NOT NULL,
+    `document_type` ENUM('CC', 'CE', 'NUIP', 'PPT', 'PPE') NOT NULL,
     `document_number` VARCHAR(20) NOT NULL,
     `name` VARCHAR(150) NOT NULL,
     `address` VARCHAR(200) NOT NULL,

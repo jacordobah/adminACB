@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface StudentRepository extends JpaRepository<Student, Long> {
 
-    Page<Student> findBySchoolIdAndUserActiveTrue(Long schoolId, Pageable pageable);
-    Page<Student> findByUserActiveTrue(Pageable pageable);
+    Page<Student> findBySchoolIdAndActiveTrue(Long schoolId, Pageable pageable);
+    Page<Student> findByActiveTrue(Pageable pageable);
 }

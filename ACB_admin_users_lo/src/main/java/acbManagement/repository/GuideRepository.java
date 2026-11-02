@@ -9,7 +9,5 @@ import java.util.Optional;
 
 public interface GuideRepository extends JpaRepository<Guide, Long> {
 
-    Optional<Guide> findByUsername(String username);
-
-    Page<Guide> findByUserActiveTrue(Pageable pageable);
+    Page<Guide> findByActiveTrue(Pageable pageable);
 }

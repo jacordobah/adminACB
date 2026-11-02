@@ -18,7 +18,7 @@ public class PersonSearchService {
         //busca en la tabla base de usuarios y, dependiendo de su rol, extrae la información unificada correspondiente
         DocumentType type = DocumentType.valueOf(documentType.toUpperCase());
         User user = userRepository.findByDocumentTypeAndDocumentNumberAndActiveTrue(type, documentNumber)
-                .orElseThrow(() -> new RuntimeException("Persona no encontrada con el documento suministrado"));
+                .orElseThrow(() -> new RuntimeException("Persona no encontrada con el documento suministrado" + documentType));
 
         return switch (user.getRole()) {
             case STUDENT -> studentService.getStudentById(user.getUserId());

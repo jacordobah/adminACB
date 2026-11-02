@@ -27,16 +27,7 @@ public class StudentService {
     @Transactional
     public Student registerCompleteStudent(UserRegistrationDto userDto, StudentRegistrationDto studentDto) {
         // FLUJO OBLIGATORIO 1: Registrar el usuario base primero
-        User userBase = userService.createUserBase(userDto, Role.STUDENT);
-
-        // FLUJO OBLIGATORIO 2: Registrar la especialización del estudiante
-        Student student = new Student();
-        student.setGrade(studentDto.grade());
-        student.setSchoolShift(studentDto.schoolShift());
-        student.setSection(studentDto.section());
-        student.setSchoolId(studentDto.schoolId());
-        student.setUser(userBase);
-
+        Student student = new Student(userDto,studentDto);
         return studentRepository.save(student);
     }
 
@@ -62,16 +53,16 @@ public class StudentService {
     }
 
     public Page<StudentDetailResponse> getAllStudentsPaged(Pageable pageable) {
-        return studentRepository.findByUserActiveTrue(pageable).map(this::convertToDetailResponse);
+        return studentRepository.findByActiveTrue(pageable).map(this::convertToDetailResponse);
     }
 
     public Page<StudentDetailResponse> getStudentsBySchoolPaged(Long schoolId, Pageable pageable) {
-        return studentRepository.findBySchoolIdAndUserActiveTrue(schoolId, pageable).map(this::convertToDetailResponse);
+        return studentRepository.findBySchoolIdAndActiveTrue(schoolId, pageable).map(this::convertToDetailResponse);
     }
 
     public StudentDetailResponse getStudentById(Long id) {
         Student student = studentRepository.findById(id)
-                .filter(s -> s.getUser().isActive())
+                .filter(s -> s.isActive())
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
         return convertToDetailResponse(student);
     }
@@ -79,13 +70,8 @@ public class StudentService {
     @Transactional
     public StudentDetailResponse updateStudent(Long id, StudentRegistrationDto dto) {
         Student student = studentRepository.findById(id)
-                .filter(s -> s.getUser().isActive())
+                .filter(s -> s.isActive())
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
-
-        /*student.getUser().setName(dto.name());
-        student.getUser().setAddress(dto.address());
-        student.getUser().setPhone(dto.phone());*/
-
         student.setGrade(dto.grade());
         student.setSchoolShift(dto.schoolShift());
         student.setSection(dto.section());
@@ -104,12 +90,12 @@ public class StudentService {
                 )).toList();
 
         return new StudentDetailResponse(
-                student.getStudentId(),
-                student.getUser().getDocumentType().name(),
-                student.getUser().getDocumentNumber(),
-                student.getUser().getName(),
-                student.getUser().getAddress(),
-                student.getUser().getPhone(),
+                student.getUserId(),
+                student.getDocumentType().name(),
+                student.getDocumentNumber(),
+                student.getName(),
+                student.getAddress(),
+                student.getPhone(),
                 student.getGrade(),
                 student.getSchoolShift(),
                 student.getSection(),
