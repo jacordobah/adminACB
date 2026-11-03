@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS routes (
     description TEXT NULL,
     school_id BIGINT NOT NULL,
     scheduled_start_time TIME NOT NULL,
-    guide_main_id BIGINT NOT NULL,
+    guide_main_id BIGINT NULL,
     guide_main_name VARCHAR(150) NULL,
     guide_support_id BIGINT NULL,
     guide_support_name VARCHAR(150) NULL,
