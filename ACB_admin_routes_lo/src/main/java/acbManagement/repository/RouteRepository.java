@@ -13,9 +13,11 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 
     boolean existsByShiftCodeAndRouteCode(String shiftCode, String routeCode);
 
-    List<Route> findBySchool_SchoolId(Long schoolId);
+    List<Route> findByActiveTrue();
 
-    List<Route> findByShiftCode(String shiftCode);
+    List<Route> findBySchool_SchoolIdAndActiveTrue(Long schoolId);
+
+    List<Route> findBySchool_ZoneAndActiveTrue(String zone);
 
     // Rutas donde el guia va como principal o como apoyo
     List<Route> findByGuideMainIdOrGuideSupportId(Long guideMainId, Long guideSupportId);
