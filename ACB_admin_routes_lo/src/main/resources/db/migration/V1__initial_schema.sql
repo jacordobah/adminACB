@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS routes (
     CONSTRAINT `fk_routes_schools`
     FOREIGN KEY (`school_id`)
     REFERENCES schools (`school_id`)
-    ON DELETE NO RESTRICT
+    ON DELETE RESTRICT
     ON UPDATE NO ACTION)
     ENGINE = InnoDB;
 
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS students_meeting_points (
     shift_code ENUM('541', '542') NOT NULL,
     meeting_point_id BIGINT NOT NULL,
     student_id BIGINT NOT NULL,
-    PRIMARY KEY (student_id, shift_code);
+    PRIMARY KEY (student_id, shift_code),
     INDEX `fk_students_meeting_points_meeting_points_idx` (`meeting_point_id` ASC) VISIBLE,
     INDEX `fk_students_meeting_points_students_idx` (`student_id` ASC) VISIBLE,
     -- CONSTRAINT uq_meeting_point_students_route UNIQUE (`student_id`,`shift_code`),
