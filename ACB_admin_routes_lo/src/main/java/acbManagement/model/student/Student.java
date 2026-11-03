@@ -1,30 +1,25 @@
 package acbManagement.model.student;
 
-import acbManagement.model.user.User;
+import acbManagement.model.route.Route;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
 
 @Entity
 @Table(name = "students")
-@PrimaryKeyJoinColumn(name = "user_id")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-public class Student extends User {
+public class Student {
+    @Id
+    @Column(name = "student_id")
+    private Long studentId; // ID componente de Users; no se genera en componente Rutas.
 
-    @Column(name = "grade", nullable = false, length = 20)
-    private String grade;
+    @Column(name = "name", length = 150)
+    private String name;
 
-    @Column(name = "school_shift", nullable = false, length = 50)
-    private String schoolShift; // Jornada 
+    private Boolean active;
 
-    // Aquí se mapeará la relación con el MeetingPoint de la ruta.
-    // Usamos el ID primitivo por ahora para mantener el compilador limpio hasta crear la otra entidad.
-    @Column(name = "meeting_point_id", nullable = false)
-    private Long meetingPointId;
-
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<StudentGuardian> guardians;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "route_id", nullable = false)
+    private Route route;
 }

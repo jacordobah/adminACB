@@ -8,9 +8,7 @@ import lombok.*;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class School {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "school_id")
@@ -19,12 +17,12 @@ public class School {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "school_code", nullable = false, unique = true, length = 50)
+    @Column(name = "school_code", nullable = false, unique = true, length = 45)
     private String schoolCode;
 
-    @Column(name = "phone", nullable = false, length = 20)
+    @Column(nullable = false, length = 45)
     private String phone;
 
     @Column(name = "active", nullable = false)
-    private boolean isActive = true; // Flag para el borrado lógico del colegio
+    private Boolean active;
 }
