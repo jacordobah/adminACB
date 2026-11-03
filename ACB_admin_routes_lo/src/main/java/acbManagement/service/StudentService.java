@@ -77,7 +77,7 @@ public class StudentService {
         Student student = getStudentOrFail(studentId);
         Long studentRouteId = student.getRoute().getRouteId();
 
-        for (AssignMeetingPointsRequest.Item item : request.assignments()) {
+        for (AssignMeetingPointsRequest.PointAssignment item : request.assignments()) {
             MeetingPoint point = meetingPointRepository.findById(item.meetingPointId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "No existe el punto de encuentro " + item.meetingPointId()));

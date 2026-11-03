@@ -91,18 +91,18 @@ public class RouteService {
     public RouteResponse assignGuides(Long id, AssignGuidesRequest request) {
         Route route = getActiveOrFail(id);
 
-        List<AssignGuidesRequest.Item> primaries = request.guides().stream()
-                .filter(AssignGuidesRequest.Item::primary).toList();
+        List<AssignGuidesRequest.GuideAssignment> primaries = request.guides().stream()
+                .filter(AssignGuidesRequest.GuideAssignment::primary).toList();
         if (primaries.size() != 1) {
             throw new IllegalArgumentException("debe haber exactamente un guia principal");
         }
-        List<AssignGuidesRequest.Item> supports = request.guides().stream()
+        List<AssignGuidesRequest.GuideAssignment> supports = request.guides().stream()
                 .filter(g -> !g.primary()).toList();
         if (supports.size() > 1) {
             throw new IllegalArgumentException("una ruta admite maximo un guia de apoyo");
         }
 
-        AssignGuidesRequest.Item main = primaries.get(0);
+        AssignGuidesRequest.GuideAssignment main = primaries.get(0);
         route.setGuideMainId(main.guideId());
         route.setGuideMainName(main.name());
 
@@ -110,7 +110,7 @@ public class RouteService {
             route.setGuideSupportId(null);
             route.setGuideSupportName(null);
         } else {
-            AssignGuidesRequest.Item support = supports.get(0);
+            AssignGuidesRequest.GuideAssignment support = supports.get(0);
             if (support.guideId().equals(main.guideId())) {
                 throw new IllegalArgumentException("el guia principal y el de apoyo no pueden ser el mismo");
             }
