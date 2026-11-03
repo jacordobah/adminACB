@@ -20,12 +20,17 @@ CREATE TABLE IF NOT EXISTS schools (
     `name` VARCHAR(150) NOT NULL,
     school_code VARCHAR(45) UNIQUE NOT NULL,
     phone VARCHAR(45) NOT NULL,
+    address VARCHAR(200) NOT NULL,
+    zone VARCHAR(45) NOT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
     active TINYINT NOT NULL DEFAULT 1,
     PRIMARY KEY (`school_id`))
     ENGINE = InnoDB;
 
     CREATE INDEX idx_code_school ON schools(`school_code`);
     CREATE INDEX idx_school_name ON schools(`name`);
+    CREATE INDEX idx_school_zone ON schools(`zone`);
 -- -----------------------------------------------------
 -- Table `acb_routes_db`.`routes`
 -- -----------------------------------------------------
