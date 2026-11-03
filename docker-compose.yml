@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # --- INFRAESTRUCTURA DE BASES DE DATOS ---
 
@@ -12,7 +10,6 @@ services:
       MYSQL_ROOT_PASSWORD: root_mysql_password # Nueva Contraseña
     volumes:
       - acb_mysql_data:/var/lib/mysql
-    command: --initialize-insecure --default-authentication-plugin=mysql_native_password
 
   acb_postgres_db:
     image: postgis/postgis:15-3.3-alpine
@@ -30,6 +27,7 @@ services:
   # --- MICROSERVICIOS (Se comunican internamente por puerto 3306) ---
 
   ACB_admin_operation_lo:
+    image: acb_admin_operation_lo:dev
     build:
       context: ./ACB_admin_operation_lo
       dockerfile: Dockerfile.dev
@@ -39,6 +37,7 @@ services:
     volumes:
       - ./ACB_admin_operation_lo:/app
     environment:
+      - SERVER_PORT=8081
       - SPRING_DATASOURCE_URL=jdbc:postgresql://acb_postgres_db:5432/acb_operation_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root_postgres_pass
@@ -47,6 +46,7 @@ services:
       - acb_postgres_db
 
   ACB_admin_routes_lo:
+    image: acb_admin_routes_lo:dev
     build:
       context: ./ACB_admin_routes_lo
       dockerfile: Dockerfile.dev
@@ -56,6 +56,7 @@ services:
     volumes:
       - ./ACB_admin_routes_lo:/app
     environment:
+      - SERVER_PORT=8082
       - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_routes_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
@@ -64,6 +65,7 @@ services:
       - acb_mysql_db
 
   ACB_admin_users_lo:
+    image: acb_admin_users_lo:dev
     build:
       context: ./ACB_admin_users_lo
       dockerfile: Dockerfile.dev
@@ -73,6 +75,7 @@ services:
     volumes:
       - ./ACB_admin_users_lo:/app
     environment:
+      - SERVER_PORT=8083
       - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_users_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
@@ -81,6 +84,7 @@ services:
       - acb_mysql_db
 
   ACB_auth_lo:
+    image: acb_auth_lo:dev
     build:
       context: ./ACB_auth_lo
       dockerfile: Dockerfile.dev
@@ -90,6 +94,7 @@ services:
     volumes:
       - ./ACB_auth_lo:/app
     environment:
+      - SERVER_PORT=8084
       - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_auth_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
