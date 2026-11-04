@@ -25,6 +25,7 @@ spring:
 acb:
   jwt:
     secret: ${ACB_JWT_SECRET:acb-dev-secret-change-me-0123456789abcdef}
+    expiration-hours: 8
 
 server:
   error:

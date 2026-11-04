@@ -23,6 +23,18 @@ public class School {
     @Column(nullable = false, length = 45)
     private String phone;
 
+    @Column(nullable = false, length = 200)
+    private String address;
+
+    @Column(nullable = false, length = 45)
+    private String zone;
+
+    @Column(nullable = false)
+    private Double latitude;
+
+    @Column(nullable = false)
+    private Double longitude;
+
     @Column(name = "active", nullable = false)
     private Boolean active;
 }

@@ -20,12 +20,17 @@ CREATE TABLE IF NOT EXISTS schools (
     `name` VARCHAR(150) NOT NULL,
     school_code VARCHAR(45) UNIQUE NOT NULL,
     phone VARCHAR(45) NOT NULL,
+    address VARCHAR(200) NOT NULL,
+    zone VARCHAR(45) NOT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
     active TINYINT NOT NULL DEFAULT 1,
     PRIMARY KEY (`school_id`))
     ENGINE = InnoDB;
 
     CREATE INDEX idx_code_school ON schools(`school_code`);
     CREATE INDEX idx_school_name ON schools(`name`);
+    CREATE INDEX idx_school_zone ON schools(`zone`);
 -- -----------------------------------------------------
 -- Table `acb_routes_db`.`routes`
 -- -----------------------------------------------------
@@ -36,7 +41,7 @@ CREATE TABLE IF NOT EXISTS routes (
     description TEXT NULL,
     school_id BIGINT NOT NULL,
     scheduled_start_time TIME NOT NULL,
-    guide_main_id BIGINT NOT NULL,
+    guide_main_id BIGINT NULL,
     guide_main_name VARCHAR(150) NULL,
     guide_support_id BIGINT NULL,
     guide_support_name VARCHAR(150) NULL,
@@ -47,7 +52,7 @@ CREATE TABLE IF NOT EXISTS routes (
     CONSTRAINT `fk_routes_schools`
     FOREIGN KEY (`school_id`)
     REFERENCES schools (`school_id`)
-    ON DELETE NO RESTRICT
+    ON DELETE RESTRICT
     ON UPDATE NO ACTION)
     ENGINE = InnoDB;
 
@@ -98,7 +103,7 @@ CREATE TABLE IF NOT EXISTS students_meeting_points (
     shift_code ENUM('541', '542') NOT NULL,
     meeting_point_id BIGINT NOT NULL,
     student_id BIGINT NOT NULL,
-    PRIMARY KEY (student_id, shift_code);
+    PRIMARY KEY (student_id, shift_code),
     INDEX `fk_students_meeting_points_meeting_points_idx` (`meeting_point_id` ASC) VISIBLE,
     INDEX `fk_students_meeting_points_students_idx` (`student_id` ASC) VISIBLE,
     -- CONSTRAINT uq_meeting_point_students_route UNIQUE (`student_id`,`shift_code`),
