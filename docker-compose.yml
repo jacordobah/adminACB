@@ -4,16 +4,24 @@ services:
   acb_mysql_db:
     image: mysql:8.0
     container_name: acb_mysql_db
+    restart: unless-stopped
     ports:
       - "3307:3306" # Mapeo externo 3307 para evitar conflicto
     environment:
       MYSQL_ROOT_PASSWORD: root_mysql_password # Nueva Contraseña
     volumes:
       - acb_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
   acb_postgres_db:
     image: postgis/postgis:15-3.3-alpine
     container_name: acb_postgres_db
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -22,6 +30,12 @@ services:
       POSTGRES_DB: acb_operation_db
     volumes:
       - acb_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d acb_operation_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
 
 
   # --- MICROSERVICIOS (Se comunican internamente por puerto 3306) ---
@@ -32,6 +46,7 @@ services:
       context: ./ACB_admin_operation_lo
       dockerfile: Dockerfile.dev
     container_name: acb_admin_operation
+    restart: unless-stopped
     ports:
       - "8081:8081"
     volumes:
@@ -43,7 +58,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root_postgres_pass
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
     depends_on:
-      - acb_postgres_db
+      acb_postgres_db:
+        condition: service_healthy
 
   ACB_admin_routes_lo:
     image: acb_admin_routes_lo:dev
@@ -51,6 +67,7 @@ services:
       context: ./ACB_admin_routes_lo
       dockerfile: Dockerfile.dev
     container_name: acb_admin_routes
+    restart: unless-stopped
     ports:
       - "8082:8082"
     volumes:
@@ -62,7 +79,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
     depends_on:
-      - acb_mysql_db
+      acb_mysql_db:
+        condition: service_healthy
 
   ACB_admin_users_lo:
     image: acb_admin_users_lo:dev
@@ -70,6 +88,7 @@ services:
       context: ./ACB_admin_users_lo
       dockerfile: Dockerfile.dev
     container_name: acb_admin_users
+    restart: unless-stopped
     ports:
       - "8083:8083"
     volumes:
@@ -81,7 +100,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
     depends_on:
-      - acb_mysql_db
+      acb_mysql_db:
+        condition: service_healthy
 
   ACB_auth_lo:
     image: acb_auth_lo:dev
@@ -89,6 +109,7 @@ services:
       context: ./ACB_auth_lo
       dockerfile: Dockerfile.dev
     container_name: acb_auth
+    restart: unless-stopped
     ports:
       - "8084:8084"
     volumes:
@@ -100,7 +121,8 @@ services:
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
     depends_on:
-      - acb_mysql_db
+      acb_mysql_db:
+        condition: service_healthy
 
 volumes:
   acb_mysql_data:
