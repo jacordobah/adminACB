@@ -12,6 +12,8 @@ public interface StudentMeetingPointRepository
 
     List<StudentMeetingPoint> findById_StudentId(Long studentId);
 
+    List<StudentMeetingPoint> findByStudent_Route_RouteId(Long routeId);
+
     Optional<StudentMeetingPoint> findById_StudentIdAndId_ShiftCode(Long studentId, String shiftCode);
 
     // Quienes se suben en un punto, para el llamado a lista del guia

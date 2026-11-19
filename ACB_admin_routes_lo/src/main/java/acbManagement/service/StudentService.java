@@ -106,13 +106,23 @@ public class StudentService {
     public List<StudentMeetingPointResponse> getMeetingPoints(Long studentId) {
         getStudentOrFail(studentId);
         return studentMeetingPointRepository.findById_StudentId(studentId).stream()
+                .map(this::toMeetingPointResponse)
+                .toList();
+    }
+
+    // Todos los puntos asignados a los estudiantes de una ruta, en una sola
+    // consulta. Evita que el gateway tenga que pedirlos estudiante por estudiante.
+    public List<RouteStudentMeetingPointResponse> getMeetingPointsByRoute(Long routeId) {
+        getRouteOrFail(routeId);
+        return studentMeetingPointRepository.findByStudent_Route_RouteId(routeId).stream()
                 .map(smp -> {
-                    MeetingPoint p = smp.getMeetingPoint();
-                    return new StudentMeetingPointResponse(
+                    MeetingPoint point = smp.getMeetingPoint();
+                    return new RouteStudentMeetingPointResponse(
+                            smp.getStudent().getStudentId(),
                             smp.getId().getShiftCode(),
-                            p.getMeetingPointId(),
-                            p.getMeetingPointCode(),
-                            p.getAddress());
+                            point.getMeetingPointId(),
+                            point.getMeetingPointCode(),
+                            point.getAddress());
                 })
                 .toList();
     }
@@ -141,6 +151,15 @@ public class StudentService {
     private Student getStudentOrFail(Long id) {
         return studentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe el estudiante " + id));
+    }
+
+    private StudentMeetingPointResponse toMeetingPointResponse(StudentMeetingPoint smp) {
+        MeetingPoint point = smp.getMeetingPoint();
+        return new StudentMeetingPointResponse(
+                smp.getId().getShiftCode(),
+                point.getMeetingPointId(),
+                point.getMeetingPointCode(),
+                point.getAddress());
     }
 
     private StudentResponse toResponse(Student s) {

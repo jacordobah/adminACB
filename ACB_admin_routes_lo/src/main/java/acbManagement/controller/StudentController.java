@@ -24,6 +24,12 @@ public class StudentController {
         return ResponseEntity.ok(studentService.findByRoute(routeId));
     }
 
+    @GetMapping("/routes/{routeId}/students/meeting-points")
+    public ResponseEntity<List<RouteStudentMeetingPointResponse>> listMeetingPointsByRoute(
+            @PathVariable Long routeId) {
+        return ResponseEntity.ok(studentService.getMeetingPointsByRoute(routeId));
+    }
+
     @PostMapping("/routes/{routeId}/students")
     public ResponseEntity<StudentResponse> assignToRoute(
             @PathVariable Long routeId,

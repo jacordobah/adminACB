@@ -2,16 +2,20 @@ package acbManagement.service;
 
 import acbManagement.dto.operation.CreateTripRequest;
 import acbManagement.dto.operation.ReplaceGuideRequest;
+import acbManagement.dto.operation.RouteAttendanceRow;
 import acbManagement.model.event.ActionCode;
 import acbManagement.model.trip.Trip;
 import acbManagement.model.trip.TripGuideAttendance;
+import acbManagement.model.trip.TripStudentAttendance;
 import acbManagement.repository.TripGuideAttendanceRepository;
 import acbManagement.repository.TripRepository;
+import acbManagement.repository.TripStudentAttendanceRepository;
 import acbManagement.repository.ActionCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.Objects;
@@ -25,6 +29,7 @@ public class TripService {
 
     private final TripRepository tripRepository;
     private final TripGuideAttendanceRepository tripGuideRepository;
+    private final TripStudentAttendanceRepository tripStudentAttendanceRepository;
     private final ActionCodeRepository actionCodeRepository;
 
     @Transactional
@@ -76,6 +81,42 @@ public class TripService {
     public Trip getByRouteAndDate(Long routeId, java.time.LocalDate tripDate) {
         return tripRepository.findByRouteIdAndTripDate(routeId, tripDate)
                 .orElseThrow(() -> OperationServiceSupport.notFound("No existe recorrido para esa ruta y fecha."));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Trip> listByDate(LocalDate tripDate, Long guideId) {
+        if (tripDate == null) {
+            throw OperationServiceSupport.badRequest("La fecha es obligatoria.");
+        }
+        List<Trip> trips = tripRepository.findAllByTripDateOrderByRouteCodeSnapshot(tripDate);
+        if (guideId == null) {
+            return trips;
+        }
+        return trips.stream()
+                .filter(trip -> tripGuideRepository
+                        .findAllByTrip_TripIdOrderByAssignmentRole(trip.getTripId()).stream()
+                        .anyMatch(assignment -> guideId.equals(assignment.getPlannedGuideId())
+                                || guideId.equals(assignment.getActualGuideId())))
+                .toList();
+    }
+
+    // Historial de asistencia de una ruta en un rango de fechas. Devuelve una
+    // fila por estudiante y recorrido para que el gateway solo tenga que
+    // traducir el estado.
+    @Transactional(readOnly = true)
+    public List<RouteAttendanceRow> listAttendanceByRoute(Long routeId, LocalDate from, LocalDate to) {
+        if (routeId == null || from == null || to == null) {
+            throw OperationServiceSupport.badRequest("La ruta y el rango de fechas son obligatorios.");
+        }
+        if (from.isAfter(to)) {
+            throw OperationServiceSupport.badRequest("La fecha inicial no puede ser posterior a la final.");
+        }
+        return tripRepository.findAllByRouteIdOrderByTripDateDesc(routeId).stream()
+                .filter(trip -> !trip.getTripDate().isBefore(from) && !trip.getTripDate().isAfter(to))
+                .flatMap(trip -> tripStudentAttendanceRepository
+                        .findAllByTrip_TripIdOrderByStudentNameSnapshot(trip.getTripId()).stream()
+                        .map(attendance -> toAttendanceRow(trip, attendance)))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -148,6 +189,18 @@ public class TripService {
         trip.setActualEndAt(endAt);
         trip.setCompletionCode(completionCode);
         return tripRepository.save(trip);
+    }
+
+    private static RouteAttendanceRow toAttendanceRow(
+            Trip trip, TripStudentAttendance attendance) {
+        return new RouteAttendanceRow(
+                trip.getTripId(),
+                trip.getRouteId(),
+                trip.getTripDate(),
+                trip.getShiftCodeSnapshot(),
+                attendance.getId().getStudentId(),
+                attendance.getStudentNameSnapshot(),
+                attendance.getStatusCode());
     }
 
     private static TripGuideAttendance createGuideAssignment(

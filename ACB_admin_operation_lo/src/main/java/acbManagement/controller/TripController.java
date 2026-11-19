@@ -2,6 +2,7 @@ package acbManagement.controller;
 
 import acbManagement.dto.operation.CreateTripRequest;
 import acbManagement.dto.operation.ReplaceGuideRequest;
+import acbManagement.dto.operation.RouteAttendanceRow;
 import acbManagement.dto.operation.TripLifecycleRequest;
 import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.trip.Trip;
@@ -60,12 +61,34 @@ public class TripController {
         return tripService.replaceGuide(tripId, tripGuideId, request, actor.userId());
     }
 
+    @GetMapping
+    public java.util.List<Trip> list(
+            @RequestParam LocalDate date,
+            @RequestParam(required = false) Long guideId,
+            @AuthenticationPrincipal Jwt jwt) {
+        CurrentActor actor = CurrentActor.from(jwt);
+        actor.requireAnyRole("GUIDE", "LEADER", "MANAGER");
+        // Un guia solo ve sus propios recorridos, aunque no envie guideId.
+        Long effectiveGuideId = "GUIDE".equals(actor.role()) ? actor.userId() : guideId;
+        return tripService.listByDate(date, effectiveGuideId);
+    }
+
     @GetMapping("/by-route/{routeId}")
     public Trip getByRouteAndDate(
             @PathVariable Long routeId, @RequestParam LocalDate date,
             @AuthenticationPrincipal Jwt jwt) {
         CurrentActor.from(jwt).requireAnyRole("LEADER", "MANAGER");
         return tripService.getByRouteAndDate(routeId, date);
+    }
+
+    @GetMapping("/by-route/{routeId}/attendance")
+    public java.util.List<RouteAttendanceRow> listAttendanceByRoute(
+            @PathVariable Long routeId,
+            @RequestParam LocalDate from,
+            @RequestParam LocalDate to,
+            @AuthenticationPrincipal Jwt jwt) {
+        CurrentActor.from(jwt).requireAnyRole("LEADER", "MANAGER");
+        return tripService.listAttendanceByRoute(routeId, from, to);
     }
 
     @PostMapping("/{tripId}/start")
