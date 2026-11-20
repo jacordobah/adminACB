@@ -9,6 +9,7 @@ services:
       - "3307:3306" # Mapeo externo 3307 para evitar conflicto
     environment:
       MYSQL_ROOT_PASSWORD: root_mysql_password # Nueva Contraseña
+      TZ: America/Bogota
     volumes:
       - acb_mysql_data:/var/lib/mysql
     healthcheck:
@@ -28,6 +29,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root_postgres_pass
       POSTGRES_DB: acb_operation_db
+      TZ: America/Bogota
     volumes:
       - acb_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -57,6 +59,9 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root_postgres_pass
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+      - TZ=America/Bogota
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=America/Bogota
+
     depends_on:
       acb_postgres_db:
         condition: service_healthy
@@ -78,6 +83,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+      - TZ=America/Bogota
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=America/Bogota
     depends_on:
       acb_mysql_db:
         condition: service_healthy
@@ -99,6 +106,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+      - TZ=America/Bogota
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=America/Bogota
     depends_on:
       acb_mysql_db:
         condition: service_healthy
@@ -120,6 +129,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
+      - TZ=America/Bogota
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=America/Bogota
     depends_on:
       acb_mysql_db:
         condition: service_healthy
