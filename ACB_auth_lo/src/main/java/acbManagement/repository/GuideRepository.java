@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface GuideRepository extends JpaRepository<Guide, Long> {
 
     Optional<Guide> findByUsername(String username);
+    Boolean existsByUsername(String username);
 }

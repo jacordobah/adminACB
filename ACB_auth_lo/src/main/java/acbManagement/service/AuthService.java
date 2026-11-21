@@ -4,6 +4,7 @@ import acbManagement.dto.LoginRequest;
 import acbManagement.dto.LoginResponse;
 import acbManagement.model.guide.Guide;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -37,7 +38,9 @@ public class AuthService {
             Guide guide = (Guide) auth.getPrincipal();
             String token = jwtService.createToken(guide);
             return new LoginResponse(token,
-                    new LoginResponse.UserInfo(guide.getGuideId(),guide.getRole().name()));
+                    new LoginResponse.UserInfo(guide.getGuideId(), guide.getRole().name()));
+        } catch (DisabledException e){
+            throw e;
         } catch (AuthenticationException e) {
             throw new IllegalArgumentException("Usuario o contraseña incorrectos.");
         }
