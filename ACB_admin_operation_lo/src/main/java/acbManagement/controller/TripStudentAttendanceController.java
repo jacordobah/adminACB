@@ -49,6 +49,7 @@ public class TripStudentAttendanceController {
             @PathVariable Long tripId, @PathVariable Long studentId,
             @RequestBody AttendanceCommand request, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
+        actor.requireAnyRole("GUIDE", "LEADER", "MANAGER");
         tripAccessService.requireCanAccessTrip(tripId, actor);
         AttendanceCommand command = new AttendanceCommand(studentId, request.studentNameSnapshot(),
                 request.statusCode(), request.note(), request.accompanyingPersonName(),

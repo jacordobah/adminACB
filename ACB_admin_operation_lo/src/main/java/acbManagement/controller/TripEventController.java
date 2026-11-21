@@ -48,8 +48,8 @@ public class TripEventController {
             reporterId = null;
         } else {
             tripAccessService.requireCanAccessTrip(tripId, actor);
-            reporterType = "GUIDE".equals(actor.role()) ? "GUIDE" : "ADMIN";
-            source = "GUIDE".equals(actor.role()) ? "GUIDE_APP" : "ADMIN_UI";
+            reporterType = "GUIDE".equals(actor.role()) ? "GUIDE" : "LEADER";
+            source = "GUIDE".equals(actor.role()) ? "GUIDE_APP" : "LEADER_UI";
             reporterId = actor.userId();
         }
 

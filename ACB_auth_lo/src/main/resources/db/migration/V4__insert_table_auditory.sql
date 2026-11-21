@@ -1,0 +1,10 @@
+CREATE TABLE auditory_login (
+    audit_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    manager_id BIGINT NOT NULL,
+    guide_id BIGINT NOT NULL,
+    action VARCHAR(30) NOT NULL, -- 'CREATE', 'UPDATE_ROLE', 'ACTIVATE', 'DEACTIVATE'
+    previous_value VARCHAR(50) NULL,
+    new_value VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)
+    ENGINE = InnoDB;

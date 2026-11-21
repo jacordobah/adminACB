@@ -28,7 +28,7 @@ public class GuideCheckInController {
             @PathVariable Long tripGuideId, @RequestBody GeolocationCheckInRequest request,
             @AuthenticationPrincipal Jwt jwt) {
         // Auth debe emitir una identidad de servicio con role=GEOLOCATION.
-        CurrentActor.from(jwt).requireAnyRole("GEOLOCATION");
+        CurrentActor.from(jwt).requireAnyRole("GUIDE", "LEADER","GEOLOCATION");
         GuideCheckInCommand command = new GuideCheckInCommand(
                 request.attemptedAt(), request.latitude(), request.longitude(),
                 request.distanceToStartM(), request.allowedRadiusM(), request.withinRadius(),
