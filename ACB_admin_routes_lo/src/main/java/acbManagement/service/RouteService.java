@@ -2,6 +2,7 @@ package acbManagement.service;
 
 import acbManagement.infra.exception.DuplicateResourceException;
 import acbManagement.infra.exception.ResourceNotFoundException;
+import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.route.DTO.*;
 import acbManagement.model.route.Route;
 import acbManagement.model.school.School;
@@ -9,6 +10,8 @@ import acbManagement.repository.RouteRepository;
 import acbManagement.repository.SchoolRepository;
 import acbManagement.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +26,8 @@ public class RouteService {
     private final SchoolRepository schoolRepository;
     private final StudentRepository studentRepository;
 
-    public List<RouteResponse> findAll(Long schoolId, String zone) {
+    public List<RouteResponse> findAll(Long schoolId, String zone, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         List<Route> routes;
         if (schoolId != null) {
             routes = routeRepository.findBySchool_SchoolIdAndActiveTrue(schoolId);
@@ -35,12 +39,14 @@ public class RouteService {
         return routes.stream().map(this::toResponse).toList();
     }
 
-    public RouteResponse findById(Long id) {
+    public RouteResponse findById(Long id, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         return toResponse(getActiveOrFail(id));
     }
 
     @Transactional
-    public RouteResponse create(RouteRequest request) {
+    public RouteResponse create(RouteRequest request, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         if (routeRepository.existsByShiftCodeAndRouteCode(request.shiftCode(), request.routeCode())) {
             throw new DuplicateResourceException(
                     "Ya existe la ruta " + request.routeCode() + " en la jornada " + request.shiftCode());
@@ -58,7 +64,8 @@ public class RouteService {
     }
 
     @Transactional
-    public RouteResponse update(Long id, RouteRequest request) {
+    public RouteResponse update(Long id, RouteRequest request, CurrentActor actor) {
+        actor.requireAnyRole("MANAGER");
         Route route = getActiveOrFail(id);
 
         boolean pairChanged = !route.getShiftCode().equals(request.shiftCode())
@@ -79,7 +86,8 @@ public class RouteService {
     }
 
     @Transactional
-    public void deactivate(Long id) {
+    public void deactivate(Long id, CurrentActor actor) {
+        actor.requireAnyRole("MANAGER");
         Route route = getActiveOrFail(id);
         route.setActive(false);
         routeRepository.save(route);
@@ -88,7 +96,9 @@ public class RouteService {
     // Asigna uno o dos guias a la ruta. Exactamente uno debe ser el principal;
     // el otro, si viene, queda como apoyo.
     @Transactional
-    public RouteResponse assignGuides(Long id, AssignGuidesRequest request) {
+    public RouteResponse assignGuides(Long id, AssignGuidesRequest request, CurrentActor actor) {
+
+        actor.requireAnyRole("LEADER","MANAGER");
         Route route = getActiveOrFail(id);
 
         List<AssignGuidesRequest.GuideAssignment> primaries = request.guides().stream()

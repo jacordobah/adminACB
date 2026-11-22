@@ -1,5 +1,6 @@
 package acbManagement.service;
 
+import acbManagement.infra.securiity.CurrentActor;
 import acbManagement.model.student.DTO.AssignGuardianDto;
 import acbManagement.model.student.DTO.GuardianDetailResponse;
 import acbManagement.model.student.DTO.StudentDetailResponse;
@@ -13,6 +14,8 @@ import acbManagement.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,14 +28,16 @@ public class StudentService {
     private final StudentRepository studentRepository;
 
     @Transactional
-    public Student registerCompleteStudent(UserRegistrationDto userDto, StudentRegistrationDto studentDto) {
+    public Student registerCompleteStudent(UserRegistrationDto userDto, StudentRegistrationDto studentDto, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         // FLUJO OBLIGATORIO 1: Registrar el usuario base primero
         Student student = new Student(userDto,studentDto);
         return studentRepository.save(student);
     }
 
     @Transactional
-    public void assignGuardianToStudent(Long studentId, AssignGuardianDto dto) {
+    public void assignGuardianToStudent(Long studentId, AssignGuardianDto dto, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
 
@@ -52,15 +57,18 @@ public class StudentService {
         studentRepository.save(student);
     }
 
-    public Page<StudentDetailResponse> getAllStudentsPaged(Pageable pageable) {
+    public Page<StudentDetailResponse> getAllStudentsPaged(Pageable pageable,CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         return studentRepository.findByActiveTrue(pageable).map(this::convertToDetailResponse);
     }
 
-    public Page<StudentDetailResponse> getStudentsBySchoolPaged(Long schoolId, Pageable pageable) {
+    public Page<StudentDetailResponse> getStudentsBySchoolPaged(Long schoolId, Pageable pageable, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         return studentRepository.findBySchoolIdAndActiveTrue(schoolId, pageable).map(this::convertToDetailResponse);
     }
 
-    public StudentDetailResponse getStudentById(Long id) {
+    public StudentDetailResponse getStudentById(Long id, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = studentRepository.findById(id)
                 .filter(s -> s.isActive())
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));
@@ -68,7 +76,8 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentDetailResponse updateStudent(Long id, StudentRegistrationDto dto) {
+    public StudentDetailResponse updateStudent(Long id, StudentRegistrationDto dto, CurrentActor actor){
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = studentRepository.findById(id)
                 .filter(s -> s.isActive())
                 .orElseThrow(() -> new RuntimeException("Estudiante no encontrado"));

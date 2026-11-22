@@ -1,4 +1,5 @@
 package acbManagement.service;
+import acbManagement.infra.securiity.CurrentActor;
 import acbManagement.model.user.DTO.UserResponse;
 import acbManagement.model.user.DocumentType;
 import acbManagement.model.user.User;
@@ -14,15 +15,18 @@ public class PersonSearchService {
     private final StudentService studentService;
     private final GuideService guideService;
 
-    public Object searchByDocument(String documentType, String documentNumber) {
+    public Object searchByDocument(String documentType, String documentNumber, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","GUIDE","MANAGER");
         //busca en la tabla base de usuarios y, dependiendo de su rol, extrae la información unificada correspondiente
         DocumentType type = DocumentType.valueOf(documentType.toUpperCase());
+
+
         User user = userRepository.findByDocumentTypeAndDocumentNumberAndActiveTrue(type, documentNumber)
                 .orElseThrow(() -> new RuntimeException("Persona no encontrada con el documento suministrado" + documentType));
 
         return switch (user.getRole()) {
-            case STUDENT -> studentService.getStudentById(user.getUserId());
-            case GUIDE -> guideService.getGuideById(user.getUserId());
+            case STUDENT -> studentService.getStudentById(user.getUserId(), actor);
+            case GUIDE -> guideService.getGuideById(user.getUserId(), actor);
             default -> new UserResponse(
                     user.getUserId(),
                     user.getDocumentType().name(),

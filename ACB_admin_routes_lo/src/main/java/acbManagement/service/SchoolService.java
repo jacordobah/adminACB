@@ -2,11 +2,14 @@ package acbManagement.service;
 
 import acbManagement.infra.exception.DuplicateResourceException;
 import acbManagement.infra.exception.ResourceNotFoundException;
+import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.school.DTO.SchoolRequest;
 import acbManagement.model.school.DTO.SchoolResponse;
 import acbManagement.model.school.School;
 import acbManagement.repository.SchoolRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,19 +21,22 @@ public class SchoolService {
 
     private final SchoolRepository schoolRepository;
 
-    public List<SchoolResponse> findAll(String zone) {
+    public List<SchoolResponse> findAll(String zone, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         List<School> schools = (zone == null || zone.isBlank())
                 ? schoolRepository.findByActiveTrue()
                 : schoolRepository.findByZoneAndActiveTrue(zone);
         return schools.stream().map(this::toResponse).toList();
     }
 
-    public SchoolResponse findById(Long id) {
+    public SchoolResponse findById(Long id, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         return toResponse(getActiveOrFail(id));
     }
 
     @Transactional
-    public SchoolResponse create(SchoolRequest request) {
+    public SchoolResponse create(SchoolRequest request, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         if (schoolRepository.existsBySchoolCode(request.schoolCode())) {
             throw new DuplicateResourceException(
                     "Ya existe un colegio con el codigo " + request.schoolCode());
@@ -42,7 +48,8 @@ public class SchoolService {
     }
 
     @Transactional
-    public SchoolResponse update(Long id, SchoolRequest request) {
+    public SchoolResponse update(Long id, SchoolRequest request, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         School school = getActiveOrFail(id);
         boolean codeChanged = !school.getSchoolCode().equals(request.schoolCode());
         if (codeChanged && schoolRepository.existsBySchoolCode(request.schoolCode())) {
@@ -56,7 +63,8 @@ public class SchoolService {
     // Baja logica: el colegio queda inactivo pero no se borra,
     // porque las rutas y los recorridos ya ejecutados lo referencian
     @Transactional
-    public void deactivate(Long id) {
+    public void deactivate(Long id,CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         School school = getActiveOrFail(id);
         school.setActive(false);
         schoolRepository.save(school);
