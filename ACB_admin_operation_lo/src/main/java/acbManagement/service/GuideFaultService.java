@@ -1,5 +1,6 @@
 package acbManagement.service;
 
+import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.guide.GuideFaultCycle;
 import acbManagement.model.guide.MajorFault;
 import acbManagement.model.guide.MinorFault;
@@ -26,12 +27,14 @@ public class GuideFaultService {
     private final MajorFaultRepository majorFaultRepository;
 
     @Transactional(readOnly = true)
-    public List<GuideFaultCycle> listCyclesForGuide(Long guideId) {
+    public List<GuideFaultCycle> listCyclesForGuide(Long guideId, CurrentActor actor) {
+        actor.requireAnyRole("LEADER", "MANAGER");
         return cycleRepository.findAllByGuideIdOrderByOpenedAtDesc(guideId);
     }
 
     @Transactional(readOnly = true)
-    public List<MinorFault> listMinorFaults(Long cycleId) {
+    public List<MinorFault> listMinorFaults(Long cycleId, CurrentActor actor) {
+        actor.requireAnyRole("LEADER", "MANAGER");
         if (!cycleRepository.existsById(cycleId)) {
             throw OperationServiceSupport.notFound("No existe el ciclo de faltas " + cycleId);
         }
@@ -39,7 +42,8 @@ public class GuideFaultService {
     }
 
     @Transactional(readOnly = true)
-    public MajorFault getMajorFault(Long majorFaultId) {
+    public MajorFault getMajorFault(Long majorFaultId, CurrentActor actor) {
+        actor.requireAnyRole("LEADER", "MANAGER");
         return majorFaultRepository.findById(majorFaultId)
                 .orElseThrow(() -> OperationServiceSupport.notFound("No existe la falta grave " + majorFaultId));
     }
@@ -65,7 +69,8 @@ public class GuideFaultService {
     }
 
     @Transactional
-    public MinorFault markMinorFaultNotified(Long minorFaultId, Long leaderUserId) {
+    public MinorFault markMinorFaultNotified(Long minorFaultId, Long leaderUserId, CurrentActor actor) {
+        actor.requireAnyRole("LEADER", "MANAGER");
         MinorFault fault = minorFaultRepository.findById(minorFaultId)
                 .orElseThrow(() -> OperationServiceSupport.notFound("No existe la falta leve " + minorFaultId));
         if (!"PENDING".equals(fault.getStatus())) {
@@ -78,7 +83,8 @@ public class GuideFaultService {
     }
 
     @Transactional
-    public MajorFault markMajorFaultNotified(Long majorFaultId, Long managerUserId) {
+    public MajorFault markMajorFaultNotified(Long majorFaultId, Long managerUserId, CurrentActor actor) {
+        actor.requireAnyRole("LEADER", "MANAGER");
         MajorFault fault = majorFaultRepository.findById(majorFaultId)
                 .orElseThrow(() -> OperationServiceSupport.notFound("No existe la falta grave " + majorFaultId));
         if (!"OPEN".equals(fault.getStatus())) {
@@ -91,7 +97,8 @@ public class GuideFaultService {
     }
 
     @Transactional
-    public MajorFault markMajorFaultMinuted(Long majorFaultId) {
+    public MajorFault markMajorFaultMinuted(Long majorFaultId, CurrentActor actor) {
+        actor.requireAnyRole("MANAGER");
         MajorFault fault = majorFaultRepository.findById(majorFaultId)
                 .orElseThrow(() -> OperationServiceSupport.notFound("No existe la falta grave " + majorFaultId));
         if (!"NOTIFIED".equals(fault.getStatus())) {
