@@ -3,6 +3,7 @@ services:
 
   acb_mysql_db:
     image: mysql:8.0
+    command: ["--ssl-ca=/run/acb-tls/ca.crt", "--ssl-cert=/run/acb-tls/mysql.crt", "--ssl-key=/run/acb-tls/mysql.key", "--require_secure_transport=ON"]
     container_name: acb_mysql_db
     restart: unless-stopped
     ports:
@@ -12,8 +13,11 @@ services:
       TZ: America/Bogota
     volumes:
       - acb_mysql_data:/var/lib/mysql
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/ca.crt:/run/acb-tls/ca.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/mysql.crt:/run/acb-tls/mysql.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/mysql.key:/run/acb-tls/mysql.key:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h acb_mysql_db -uroot -p$$MYSQL_ROOT_PASSWORD --ssl-ca=/run/acb-tls/ca.crt --ssl-mode=VERIFY_IDENTITY --silent"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -21,6 +25,7 @@ services:
 
   acb_postgres_db:
     image: postgis/postgis:15-3.3-alpine
+    entrypoint: ["sh", "-c", "cp /run/acb-tls/postgres.key /tmp/acb-postgres.key && chown postgres:postgres /tmp/acb-postgres.key && chmod 600 /tmp/acb-postgres.key && exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/run/acb-tls/postgres.crt -c ssl_key_file=/tmp/acb-postgres.key -c ssl_ca_file=/run/acb-tls/ca.crt -c hba_file=/run/acb-tls/pg_hba.conf"]
     container_name: acb_postgres_db
     restart: unless-stopped
     ports:
@@ -32,6 +37,12 @@ services:
       TZ: America/Bogota
     volumes:
       - acb_postgres_data:/var/lib/postgresql/data
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/ca.crt:/run/acb-tls/ca.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/postgres.crt:/run/acb-tls/postgres.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/postgres.key:/run/acb-tls/postgres.key:ro
+      - ./tls/pg_hba.conf:/run/acb-tls/pg_hba.conf:ro
+    tmpfs:
+      - /tmp
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d acb_operation_db"]
       interval: 5s
@@ -53,9 +64,14 @@ services:
       - "8081:8081"
     volumes:
       - ./ACB_admin_operation_lo:/app
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/operations.crt:/run/acb-tls/operations.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/operations.key:/run/acb-tls/operations.key:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/ca.crt:/run/acb-tls/ca.crt:ro
     environment:
       - SERVER_PORT=8081
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://acb_postgres_db:5432/acb_operation_db
+      - SERVER_SSL_CERTIFICATE=file:/run/acb-tls/operations.crt
+      - SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/run/acb-tls/operations.key
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://acb_postgres_db:5432/acb_operation_db?sslmode=verify-full&sslrootcert=/run/acb-tls/ca.crt
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=root_postgres_pass
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
@@ -65,6 +81,10 @@ services:
     depends_on:
       acb_postgres_db:
         condition: service_healthy
+    networks:
+      default: {}
+      acb-net:
+        aliases: [acb-operations]
 
   ACB_admin_routes_lo:
     image: acb_admin_routes_lo:dev
@@ -77,9 +97,14 @@ services:
       - "8082:8082"
     volumes:
       - ./ACB_admin_routes_lo:/app
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/routes.crt:/run/acb-tls/routes.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/routes.key:/run/acb-tls/routes.key:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/truststore.p12:/run/acb-tls/truststore.p12:ro
     environment:
       - SERVER_PORT=8082
-      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_routes_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SERVER_SSL_CERTIFICATE=file:/run/acb-tls/routes.crt
+      - SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/run/acb-tls/routes.key
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_routes_db?createDatabaseIfNotExist=true&sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStoreUrl=file:/run/acb-tls/truststore.p12&trustCertificateKeyStorePassword=${ACB_TLS_TRUSTSTORE_PASSWORD_URL:?Set URL-encoded external truststore password}
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
@@ -88,6 +113,10 @@ services:
     depends_on:
       acb_mysql_db:
         condition: service_healthy
+    networks:
+      default: {}
+      acb-net:
+        aliases: [acb-routes]
 
   ACB_admin_users_lo:
     image: acb_admin_users_lo:dev
@@ -100,9 +129,14 @@ services:
       - "8083:8083"
     volumes:
       - ./ACB_admin_users_lo:/app
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/users.crt:/run/acb-tls/users.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/users.key:/run/acb-tls/users.key:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/truststore.p12:/run/acb-tls/truststore.p12:ro
     environment:
       - SERVER_PORT=8083
-      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_users_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SERVER_SSL_CERTIFICATE=file:/run/acb-tls/users.crt
+      - SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/run/acb-tls/users.key
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_users_db?createDatabaseIfNotExist=true&sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStoreUrl=file:/run/acb-tls/truststore.p12&trustCertificateKeyStorePassword=${ACB_TLS_TRUSTSTORE_PASSWORD_URL:?Set URL-encoded external truststore password}
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
@@ -111,6 +145,10 @@ services:
     depends_on:
       acb_mysql_db:
         condition: service_healthy
+    networks:
+      default: {}
+      acb-net:
+        aliases: [acb-users]
 
   ACB_auth_lo:
     image: acb_auth_lo:dev
@@ -123,9 +161,14 @@ services:
       - "8084:8084"
     volumes:
       - ./ACB_auth_lo:/app
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/auth.crt:/run/acb-tls/auth.crt:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/auth.key:/run/acb-tls/auth.key:ro
+      - ${ACB_TLS_DIR:?Set external ACB_TLS_DIR}/truststore.p12:/run/acb-tls/truststore.p12:ro
     environment:
       - SERVER_PORT=8084
-      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_auth_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      - SERVER_SSL_CERTIFICATE=file:/run/acb-tls/auth.crt
+      - SERVER_SSL_CERTIFICATE_PRIVATE_KEY=file:/run/acb-tls/auth.key
+      - SPRING_DATASOURCE_URL=jdbc:mysql://acb_mysql_db:3306/acb_auth_db?createDatabaseIfNotExist=true&sslMode=VERIFY_IDENTITY&trustCertificateKeyStoreType=PKCS12&trustCertificateKeyStoreUrl=file:/run/acb-tls/truststore.p12&trustCertificateKeyStorePassword=${ACB_TLS_TRUSTSTORE_PASSWORD_URL:?Set URL-encoded external truststore password}
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=root_mysql_password
       - ACB_JWT_SECRET=acb-dev-secret-change-me-0123456789abcdef
@@ -134,7 +177,16 @@ services:
     depends_on:
       acb_mysql_db:
         condition: service_healthy
+    networks:
+      default: {}
+      acb-net:
+        aliases: [acb-auth]
 
 volumes:
   acb_mysql_data:
   acb_postgres_data:
+
+networks:
+  acb-net:
+    external: true
+    name: acb-net
