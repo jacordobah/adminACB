@@ -2,6 +2,7 @@ package acbManagement.service;
 
 import acbManagement.infra.exception.DuplicateResourceException;
 import acbManagement.infra.exception.ResourceNotFoundException;
+import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.meetingPoint.DTO.MeetingPointRequest;
 import acbManagement.model.meetingPoint.DTO.MeetingPointResponse;
 import acbManagement.model.meetingPoint.MeetingPoint;
@@ -10,6 +11,8 @@ import acbManagement.repository.MeetingPointRepository;
 import acbManagement.repository.RouteRepository;
 import acbManagement.repository.StudentMeetingPointRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,18 +26,21 @@ public class MeetingPointService {
     private final RouteRepository routeRepository;
     private final StudentMeetingPointRepository studentMeetingPointRepository;
 
-    public List<MeetingPointResponse> findByRoute(Long routeId) {
+    public List<MeetingPointResponse> findByRoute(Long routeId, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         getRouteOrFail(routeId);
         return meetingPointRepository.findByRoute_RouteIdOrderByDistanceAsc(routeId)
                 .stream().map(this::toResponse).toList();
     }
 
-    public MeetingPointResponse findById(Long id) {
+    public MeetingPointResponse findById(Long id, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         return toResponse(getOrFail(id));
     }
 
     @Transactional
-    public MeetingPointResponse create(Long routeId, MeetingPointRequest request) {
+    public MeetingPointResponse create(Long routeId, MeetingPointRequest request, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         Route route = getRouteOrFail(routeId);
         if (meetingPointRepository.existsByRoute_RouteIdAndMeetingPointCode(routeId, request.meetingPointCode())) {
             throw new DuplicateResourceException(
@@ -47,7 +53,8 @@ public class MeetingPointService {
     }
 
     @Transactional
-    public MeetingPointResponse update(Long id, MeetingPointRequest request) {
+    public MeetingPointResponse update(Long id, MeetingPointRequest request, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         MeetingPoint point = getOrFail(id);
         Long routeId = point.getRoute().getRouteId();
         boolean codeChanged = !point.getMeetingPointCode().equals(request.meetingPointCode());
@@ -63,7 +70,8 @@ public class MeetingPointService {
     // Borrado real: un punto no tiene baja logica. Se bloquea si hay
     // estudiantes asignados a el, para no dejar asignaciones colgando.
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, CurrentActor actor) {
+        actor.requireAnyRole("LEADER","MANAGER");
         MeetingPoint point = getOrFail(id);
         if (!studentMeetingPointRepository.findByMeetingPoint_MeetingPointId(id).isEmpty()) {
             throw new DuplicateResourceException(

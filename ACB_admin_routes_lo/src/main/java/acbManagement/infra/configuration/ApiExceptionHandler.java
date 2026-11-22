@@ -4,6 +4,7 @@ import acbManagement.infra.exception.DuplicateResourceException;
 import acbManagement.infra.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +25,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DuplicateResourceException e) {
         return build(HttpStatus.CONFLICT, e.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException e) {
+        return build(HttpStatus.FORBIDDEN, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

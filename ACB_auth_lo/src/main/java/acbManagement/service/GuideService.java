@@ -82,16 +82,16 @@ public class GuideService {
         auditoryLoginRepository.save(audit);
     }
 
-    @Transactional
-    public LoginResponseCreateUpdate updateStatus(LoginUpdateStatus request, CurrentActor actor) {
-        actor.requireAnyRole("MANAGER");
+        @Transactional
+        public LoginResponseCreateUpdate updateStatus(LoginUpdateStatus request, CurrentActor actor) {
+            actor.requireAnyRole("MANAGER");
 
-        if (actor.id().equals(request.guideId()) && !request.active()) {
-            throw new IllegalStateException("No puedes desactivar tu propio usuario");
-        }
+            if (actor.id().equals(request.guideId()) && !request.active()) {
+                throw new IllegalStateException("No puedes desactivar tu propio usuario");
+            }
 
-        Guide guide = guideRepository.findById(request.guideId())
-                .orElseThrow(() -> new EntityNotFoundException("Guía no encontrado con ID: " + request.guideId()));
+            Guide guide = guideRepository.findById(request.guideId())
+                    .orElseThrow(() -> new EntityNotFoundException("Guía no encontrado con ID: " + request.guideId()));
 
         boolean previousStatus = guide.isActive();
         boolean newStatus = request.active();

@@ -2,6 +2,7 @@ package acbManagement.service;
 
 import acbManagement.infra.exception.DuplicateResourceException;
 import acbManagement.infra.exception.ResourceNotFoundException;
+import acbManagement.infra.security.CurrentActor;
 import acbManagement.model.meetingPoint.MeetingPoint;
 import acbManagement.model.route.Route;
 import acbManagement.model.student.DTO.*;
@@ -13,6 +14,8 @@ import acbManagement.repository.RouteRepository;
 import acbManagement.repository.StudentMeetingPointRepository;
 import acbManagement.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,18 +32,21 @@ public class StudentService {
 
     // ---- Estudiantes de una ruta ----
 
-    public List<StudentResponse> findByRoute(Long routeId) {
+    public List<StudentResponse> findByRoute(Long routeId, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         getRouteOrFail(routeId);
         return studentRepository.findByRoute_RouteId(routeId)
                 .stream().map(this::toResponse).toList();
     }
 
-    public StudentResponse findById(Long id) {
+    public StudentResponse findById(Long id, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         return toResponse(getStudentOrFail(id));
     }
 
     @Transactional
-    public StudentResponse assignToRoute(Long routeId, StudentRequest request) {
+    public StudentResponse assignToRoute(Long routeId, StudentRequest request, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Route route = getRouteOrFail(routeId);
         if (studentRepository.existsById(request.studentId())) {
             throw new DuplicateResourceException(
@@ -55,7 +61,8 @@ public class StudentService {
     }
 
     @Transactional
-    public StudentResponse update(Long id, StudentUpdateRequest request) {
+    public StudentResponse update(Long id, StudentUpdateRequest request, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = getStudentOrFail(id);
         student.setName(request.name());
         student.setActive(request.active());
@@ -63,7 +70,8 @@ public class StudentService {
     }
 
     @Transactional
-    public void deactivate(Long id) {
+    public void deactivate(Long id, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = getStudentOrFail(id);
         student.setActive(false);
         studentRepository.save(student);
@@ -73,7 +81,8 @@ public class StudentService {
 
     @Transactional
     public List<StudentMeetingPointResponse> assignMeetingPoints(
-            Long studentId, AssignMeetingPointsRequest request) {
+            Long studentId, AssignMeetingPointsRequest request, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         Student student = getStudentOrFail(studentId);
         Long studentRouteId = student.getRoute().getRouteId();
 
@@ -100,10 +109,11 @@ public class StudentService {
             smp.setMeetingPoint(point);
             studentMeetingPointRepository.save(smp);
         }
-        return getMeetingPoints(studentId);
+        return getMeetingPoints(studentId, actor);
     }
 
-    public List<StudentMeetingPointResponse> getMeetingPoints(Long studentId) {
+    public List<StudentMeetingPointResponse> getMeetingPoints(Long studentId,CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         getStudentOrFail(studentId);
         return studentMeetingPointRepository.findById_StudentId(studentId).stream()
                 .map(this::toMeetingPointResponse)
@@ -112,7 +122,8 @@ public class StudentService {
 
     // Todos los puntos asignados a los estudiantes de una ruta, en una sola
     // consulta. Evita que el gateway tenga que pedirlos estudiante por estudiante.
-    public List<RouteStudentMeetingPointResponse> getMeetingPointsByRoute(Long routeId) {
+    public List<RouteStudentMeetingPointResponse> getMeetingPointsByRoute(Long routeId, CurrentActor actor) {
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         getRouteOrFail(routeId);
         return studentMeetingPointRepository.findByStudent_Route_RouteId(routeId).stream()
                 .map(smp -> {
@@ -128,7 +139,8 @@ public class StudentService {
     }
 
     // Llamado a lista: estudiantes activos que se suben en un punto en una jornada
-    public List<StudentAtPointResponse> getRosterAtPoint(Long meetingPointId, String shiftCode) {
+    public List<StudentAtPointResponse> getRosterAtPoint(Long meetingPointId, String shiftCode, CurrentActor actor){
+        actor.requireAnyRole("GUIDE","LEADER","MANAGER");
         if (!meetingPointRepository.existsById(meetingPointId)) {
             throw new ResourceNotFoundException("No existe el punto de encuentro " + meetingPointId);
         }
