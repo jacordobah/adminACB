@@ -29,12 +29,12 @@ public class GuideFaultController {
     public List<GuideFaultCycle> listCycles(
             @PathVariable Long guideId, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
-        actor.requireAnyRole("GUIDE", "LEADER", "MANAGER");
+        actor.requireAnyRole("LEADER", "MANAGER");
         if ("GUIDE".equals(actor.role()) && !actor.userId().equals(guideId)) {
             throw new org.springframework.web.server.ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Solo puedes consultar tus ciclos de faltas.");
         }
-        return faultService.listCyclesForGuide(guideId);
+        return faultService.listCyclesForGuide(guideId, actor);
     }
 
     @GetMapping("/cycles/{cycleId}/minor")
@@ -42,7 +42,7 @@ public class GuideFaultController {
             @PathVariable Long cycleId, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
         actor.requireAnyRole("LEADER", "MANAGER");
-        return faultService.listMinorFaults(cycleId);
+        return faultService.listMinorFaults(cycleId, actor);
     }
 
     @GetMapping("/major/{majorFaultId}")
@@ -50,7 +50,7 @@ public class GuideFaultController {
             @PathVariable Long majorFaultId, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
         actor.requireAnyRole("LEADER", "MANAGER");
-        return faultService.getMajorFault(majorFaultId);
+        return faultService.getMajorFault(majorFaultId, actor);
     }
 
     @PutMapping("/minor/{minorFaultId}/notified")
@@ -58,7 +58,7 @@ public class GuideFaultController {
             @PathVariable Long minorFaultId, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
         actor.requireAnyRole("LEADER", "MANAGER");
-        return faultService.markMinorFaultNotified(minorFaultId, actor.userId());
+        return faultService.markMinorFaultNotified(minorFaultId, actor.userId(), actor);
     }
 
     @PutMapping("/major/{majorFaultId}/notified")
@@ -66,14 +66,15 @@ public class GuideFaultController {
             @PathVariable Long majorFaultId, @AuthenticationPrincipal Jwt jwt) {
         CurrentActor actor = CurrentActor.from(jwt);
         actor.requireAnyRole("MANAGER");
-        return faultService.markMajorFaultNotified(majorFaultId, actor.userId());
+        return faultService.markMajorFaultNotified(majorFaultId, actor.userId(), actor);
     }
 
     @PutMapping("/major/{majorFaultId}/minuted")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void markMajorMinuted(
             @PathVariable Long majorFaultId, @AuthenticationPrincipal Jwt jwt) {
-        CurrentActor.from(jwt).requireAnyRole("MANAGER");
-        faultService.markMajorFaultMinuted(majorFaultId);
+        CurrentActor actor = CurrentActor.from(jwt);
+        actor.requireAnyRole("MANAGER");
+        faultService.markMajorFaultMinuted(majorFaultId, actor);
     }
 }
